@@ -6,6 +6,7 @@ public class Player_Controller : MonoBehaviour {
 
     Rigidbody2D rb = new Rigidbody2D();
     public float movementSpeed;
+    private bool enableMove = true;
     Player_Schema P;
 
     private void Start()
@@ -18,12 +19,19 @@ public class Player_Controller : MonoBehaviour {
 
     private void Update()
     {
-        //move player
-        float horizontalAxisVal = Input.GetAxis("Horizontal");
-        float verticalAxisVal = Input.GetAxis("Vertical");
-        Vector2 dir = new Vector2(horizontalAxisVal, verticalAxisVal);
-        movePlayer(dir);
-
+        if (enableMove)
+        {
+            //move player
+            float horizontalAxisVal = Input.GetAxis("Horizontal");
+            float verticalAxisVal = Input.GetAxis("Vertical");
+            Vector2 dir = new Vector2(horizontalAxisVal, verticalAxisVal);
+            movePlayer(dir);
+        }
+        else
+        {
+            Vector2 dir = new Vector2(0.0f, 0.0f);
+            movePlayer(dir);
+        }
     }
 
     private void movePlayer(Vector2 dir)
@@ -41,6 +49,12 @@ public class Player_Controller : MonoBehaviour {
     private void interractPlayer()
     {
         
+    }
+
+    public bool enablePlayerMove(bool enableMove)
+    {
+        this.enableMove = enableMove;
+        return enableMove;
     }
 
 }

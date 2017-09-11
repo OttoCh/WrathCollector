@@ -27,8 +27,9 @@ public class changeColor : MonoBehaviour {
                 c = 0;
                 k++;
             }
-            if (k == 4)
+            if (k == 1)
             {
+                //tellManager_destroyed tm = new tellManager_destroyed();
                 Destroy(gameObject);
             }
         }
