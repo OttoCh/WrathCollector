@@ -10,8 +10,10 @@ public class Player_Controller : MonoBehaviour {
     public int dash_power;
     public float additionalLinearDrag;
     private bool enableMove = true;
+    public bool grounded = false;
     Character_Move cm;
     Player_Schema P;
+    Character_Jump cj;
 
     private void Start()
     {
@@ -20,6 +22,7 @@ public class Player_Controller : MonoBehaviour {
         SpriteRenderer sp = gameObject.GetComponentInChildren<SpriteRenderer>();
         P = new Player_Schema(200, 200, 200, jump_power, dash_power, animator, sp);
         cm = new Character_Move(rb, movementSpeed, additionalLinearDrag);
+        cj = new Character_Jump(jump_power, rb, grounded);
     }
 
     private void Update()
@@ -28,10 +31,21 @@ public class Player_Controller : MonoBehaviour {
         if (enableMove)
         {
             //move player
-
             Vector2 dir = cm.moveManager();
             changePlayerAnimation();
             changePlayerSpriteDirrection();
+
+            if(Input.GetKeyDown(KeyCode.Space))
+            {
+                cj.jump();
+            }
+
+            if(Input.GetKeyDown(KeyCode.E))
+            {
+                Debug.Log("dash0");
+                Character_Dash cd = new Character_Dash(this);
+                cd.dash();
+            }
         }
     }
 
@@ -63,6 +77,19 @@ public class Player_Controller : MonoBehaviour {
         return enableMove;
     }
 
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.tag == "Ground")
+        {
+            cj.grounded = true;
+        }
+    }
+
+    public bool getCurrentDirrection()
+    {
+        return P.sp.flipX;
+    }
+
 }
 
 class Character_Move : Player_Controller
@@ -79,17 +106,15 @@ class Character_Move : Player_Controller
 
     public Vector2 moveManager()
     {
-        Debug.Log(stopMove);
         float horizontalAxisVal = Input.GetAxis("Horizontal");
         if(Mathf.Abs(horizontalAxisVal) >= 0.01f)
         {
             stopMove = false;
-            Debug.Log("has false " + stopMove);
             player_move(new Vector2(horizontalAxisVal, 0.0f)); 
         }
+
         if (Mathf.Abs(horizontalAxisVal) <= 0.01f && this.stopMove == false)
         {
-            //Debug.Log("stop player");
             player_stop();
             this.stopMove = true;
         }
@@ -109,24 +134,34 @@ class Character_Move : Player_Controller
             rb.AddForce(new Vector2(-(rb.velocity.x / 0.02f) * (additionalLinearDrag), 0.0f));
         }
     }
+
+
 }
 class Character_Jump : Player_Controller {
 
-    public Character_Jump(int jump_power, Rigidbody2D rb)
+    public Character_Jump(int jump_power, Rigidbody2D rb, bool grounded)
     {
         this.jump_power = jump_power;
         this.rb = rb;
+        this.grounded = grounded;
     }
 
     public void jump()
     {
-        Vector2 jumpVector = new Vector2(0, jump_power)*100;
-        rb.AddForce(jumpVector);
-    }
+        if (grounded)
+        {
+            Vector2 jumpVector = new Vector2(0, jump_power) * 100;
+            rb.AddForce(jumpVector);
+            grounded = false;
+        }
+     }
+
 }
 
 class Character_Dash : Player_Controller
 {
+
+    Player_Controller pc;
 
     public Character_Dash(int dash_power, Rigidbody2D rb)
     {
@@ -134,9 +169,26 @@ class Character_Dash : Player_Controller
         this.rb = rb;
     }
 
+    public Character_Dash(Player_Controller pc)
+    {
+        this.pc = pc;
+        this.dash_power = pc.dash_power;
+        this.rb = pc.rb;
+    }
+
     public void dash()
     {
-        Vector2 dashVector = new Vector2(dash_power, 0);
+        bool dirrection = pc.getCurrentDirrection();
+        Vector2 dashVector;
+        if (dirrection)
+        {
+            dashVector = new Vector2(dash_power, 0);
+        }
+        else
+        {
+            dashVector = new Vector2(-dash_power, 0);
+        }
+
         rb.AddForce(dashVector, ForceMode2D.Impulse);
     }
 
