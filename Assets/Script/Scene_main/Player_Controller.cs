@@ -9,6 +9,7 @@ public class Player_Controller : MonoBehaviour {
     public int jump_power;
     public int dash_power;
     public float additionalLinearDrag;
+    public bool dash_cond = false;
     private bool enableMove = true;
     public bool grounded = false;
     Character_Move cm;
@@ -31,9 +32,11 @@ public class Player_Controller : MonoBehaviour {
         if (enableMove)
         {
             //move player
-            Vector2 dir = cm.moveManager();
-            changePlayerAnimation();
-            changePlayerSpriteDirrection();
+            if (!dash_cond) {
+                Vector2 dir = cm.moveManager();
+                changePlayerAnimation();
+                changePlayerSpriteDirrection();
+            }
 
             if(Input.GetKeyDown(KeyCode.Space))
             {
@@ -42,7 +45,7 @@ public class Player_Controller : MonoBehaviour {
 
             if(Input.GetKeyDown(KeyCode.E))
             {
-                Debug.Log("dash0");
+                StartCoroutine(dashtime());
                 Character_Dash cd = new Character_Dash(this);
                 cd.dash();
             }
@@ -67,8 +70,9 @@ public class Player_Controller : MonoBehaviour {
 
     private void changePlayerSpriteDirrection()
     {
-        if (rb.velocity.x < 0) P.changeSpriteDirrection(true);
-        else if (rb.velocity.x > 0) P.changeSpriteDirrection(false);
+        float vel = rb.velocity.x;
+        if (vel < -0.1f) P.changeSpriteDirrection(true);
+        else if (vel > 0.1f) P.changeSpriteDirrection(false);
     }
 
     public bool enablePlayerMove(bool enableMove)
@@ -90,6 +94,12 @@ public class Player_Controller : MonoBehaviour {
         return P.sp.flipX;
     }
 
+    private IEnumerator dashtime()
+    {
+        dash_cond = true;
+        yield return new WaitForSeconds(0.2f);
+        dash_cond = false;
+    }
 }
 
 class Character_Move : Player_Controller
@@ -182,14 +192,15 @@ class Character_Dash : Player_Controller
         Vector2 dashVector;
         if (dirrection)
         {
-            dashVector = new Vector2(dash_power, 0);
+            dashVector = new Vector2(-dash_power, 0);
         }
         else
         {
-            dashVector = new Vector2(-dash_power, 0);
+            dashVector = new Vector2(dash_power, 0);
         }
 
         rb.AddForce(dashVector, ForceMode2D.Impulse);
+       
     }
 
 }
